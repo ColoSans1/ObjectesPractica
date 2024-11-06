@@ -37,9 +37,9 @@ function startGame() {
     totalCreatedWindows = 0;
     lastGameWon = false;
     lastClickedColor = null;
-    lastClickedWindow = null;
+    lastClickedWindow = null; 
     document.getElementById('message').innerHTML = '';
-    
+
     let timeLeft = 30; // 30 seconds countdown
     document.getElementById('countdown').innerHTML = timeLeft;
 
@@ -49,34 +49,25 @@ function startGame() {
 
         if (timeLeft === 0) {
             clearInterval(countdown);
-            clearInterval(windowInterval); // Asegurarse de detener el intervalo de ventanas
             endGame(false);
         }
     }, 1000);
 
-    // Abre 7 ventanas de inmediato
     for (let i = 0; i < 7; i++) {
-        openRandomWindow();
-    }
-
-    // Abre la primera ventana en el centro
-    openCenteredWindow();
-
-    // Abre una nueva ventana cada 3 segundos a partir del segundo 26
-    windowInterval = setInterval(() => {
-        if (timeLeft > 0) { // Solo abrir si hay tiempo restante
+        if (i === 0) {
+            openCenteredWindow();
+        } else {
             openRandomWindow();
         }
+    }
+
+    let newWindowInterval = setInterval(() => {
+        if (timeLeft > 0) {
+            openRandomWindow();
+        } else {
+            clearInterval(newWindowInterval);
+        }
     }, 3000);
-    
-    setTimeout(() => {
-        // Este intervalo se inicia después de 26 segundos
-        windowInterval = setInterval(() => {
-            if (timeLeft > 0) {
-                openRandomWindow();
-            }
-        }, 3000);
-    }, 26000); // 26 segundos
 }
 
 function openCenteredWindow() {
@@ -105,7 +96,6 @@ function openRandomWindow() {
     const width = 300;
     const height = 200;
 
-    // Generar posiciones aleatorias
     const left = Math.floor(Math.random() * (window.innerWidth - width));
     const top = Math.floor(Math.random() * (window.innerHeight - height));
     
@@ -122,42 +112,50 @@ function openRandomWindow() {
     totalCreatedWindows++;
     document.getElementById('createdWindowsMessage').innerHTML = `Total de finestres creades: ${totalCreatedWindows}`;
 
-    // Terminar el juego si queda una sola ventana
     if (activeWindows === 1) {
         endGame(true);
     }
 }
 
 function handleWindowClick(windowRef, color) {
-    if (lastClickedColor === color && lastClickedWindow === windowRef) {
-        // Si es la misma ventana, cambia el color
-        const newColor = colors[Math.floor(Math.random() * colors.length)];
-        windowRef.document.body.style.backgroundColor = newColor;
-        windowRef.document.querySelector('h1').innerText = newColor; // Cambiar el texto
-        lastClickedColor = newColor; // Actualizar el color
-        lastClickedWindow = windowRef; // Actualizar la ventana clicada
-    } else if (lastClickedColor === color) {
-        // Si el color es el mismo pero la ventana es diferente, cerrar ambas
+    if (lastClickedColor === null) {
+        // Primer clic: guarda el color y la referencia de la ventana
+        lastClickedColor = color; 
+        lastClickedWindow = windowRef; 
+    } else if (lastClickedColor === color && lastClickedWindow !== windowRef) {
+        // Segundo clic en una ventana de diferente referencia pero con el mismo color, cerrar ambas
         windowRef.close();
         lastClickedWindow.close();
-        activeWindows -= 2; // Disminuir por ambas ventanas cerradas
-        lastClickedColor = null; // Reiniciar el color clicado
-        lastClickedWindow = null; // Reiniciar la ventana clicada
+        activeWindows -= 2; 
+
+        // Reiniciar la referencia del último clic
+        lastClickedColor = null;
+        lastClickedWindow = null;
+    } else if (lastClickedColor === color && lastClickedWindow === windowRef) {
+        // Mismo color y misma ventana, cambiar el color de la ventana actual
+        const newColor = colors[Math.floor(Math.random() * colors.length)];
+        windowRef.document.body.style.backgroundColor = newColor;
+        windowRef.document.querySelector('h1').innerText = newColor;
+
+        // Actualizar el color y la referencia de la ventana con el nuevo color
+        lastClickedColor = newColor;
     } else {
-        // Si el color es diferente, solo actualizar el color clicado
-        lastClickedColor = color; // Actualizar el color clicado
-        lastClickedWindow = windowRef; // Actualizar la ventana clicada
+        // Color diferente, actualizamos la referencia y color del último clic
+        lastClickedColor = color;
+        lastClickedWindow = windowRef;
     }
 
-    // Comprobar si quedan ventanas activas
+    // Verificar si quedan ventanas activas
     if (activeWindows <= 0) {
         endGame(true);
     }
 }
 
+
+
 function endGame(won) {
     clearInterval(countdown);
-    clearInterval(windowInterval); // Detener el intervalo de ventanas
+    clearInterval(windowInterval);
     if (won) {
         document.getElementById('message').innerHTML = "Enhorabona! Has guanyat!";
         lastGameWon = true;
@@ -167,27 +165,22 @@ function endGame(won) {
     localStorage.setItem('totalCreatedWindows', totalCreatedWindows);
     localStorage.setItem('lastGameWon', lastGameWon);
     document.getElementById('endGameButton').style.display = 'block';
-    document.getElementById('restartButton').style.display = 'block'; // Mostrar el botón de reinicio
-    document.getElementById('startButton').style.display = 'none'; // Ocultar el botón de inicio
+    document.getElementById('restartButton').style.display = 'block';
+    document.getElementById('startButton').style.display = 'none';
 }
 
 function restartGame() {
-    // Reiniciar todas las variables y el estado del juego
     activeWindows = 0;
     totalCreatedWindows = 0;
     lastGameWon = false;
     lastClickedColor = null;
     lastClickedWindow = null;
 
-    // Reiniciar el mensaje y el conteo
     document.getElementById('message').innerHTML = '';
     document.getElementById('createdWindowsMessage').innerHTML = `Total de finestres creades: 0`;
     document.getElementById('countdown').innerHTML = '';
 
-    // Reiniciar los botones
     document.getElementById('endGameButton').style.display = 'none';
     document.getElementById('restartButton').style.display = 'none';
-
-    // Volver a mostrar el botón de inicio
     document.getElementById('startButton').style.display = 'block';
 }
