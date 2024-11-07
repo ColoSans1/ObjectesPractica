@@ -1,8 +1,8 @@
 let countdown, activeWindows = 0, totalCreatedWindows = 0, lastGameWon = false;
 let lastClickedColor = null, lastClickedWindow = null;
 const colors = ['red', 'green', 'blue', 'yellow'];
-let windowInterval; // Variable para el intervalo que crea nuevas ventanas
-let openWindows = []; // Array para almacenar las ventanas abiertas
+let windowInterval;
+let openWindows = []; 
 
 window.onload = function() {
     const lastTotalWindows = localStorage.getItem('totalCreatedWindows') || 0;
@@ -38,20 +38,15 @@ function openWindow(center = false) {
     
     const newWindow = window.open('', '', `width=${width},height=${height},top=${top},left=${left}`);
     newWindow.document.write(`<body style="background-color: ${color};"><h1>${color}</h1></body>`);
-
     newWindow.color = color;
-
     newWindow.onclick = () => handleWindowClick(newWindow);
     newWindow.ondblclick = () => {
-        // Cambiar el color de la ventana actual
         changeWindowColor(newWindow); 
-        // Abrir una nueva ventana con color aleatorio
         openWindow(); 
     };
-
     activeWindows++;
     totalCreatedWindows++;
-    openWindows.push(newWindow); // Añadir la ventana al array
+    openWindows.push(newWindow); 
     document.getElementById('createdWindowsMessage').innerHTML = `Total de finestres creades: ${totalCreatedWindows}`;
 }
 
