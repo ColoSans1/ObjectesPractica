@@ -1,6 +1,8 @@
 let countdown, activeWindows = 0, totalCreatedWindows = 0, lastGameWon = false;
 let lastClickedColor = null, lastClickedWindow = null;
 const colors = ['red', 'green', 'blue', 'yellow'];
+let windowInterval; // Variable para el intervalo que crea nuevas ventanas
+let openWindows = []; // Array para almacenar las ventanas abiertas
 
 window.onload = function() {
     const lastTotalWindows = localStorage.getItem('totalCreatedWindows') || 0;
@@ -23,11 +25,13 @@ function startGame() {
         if (timeLeft === 0) endGame(false);
     }, 1000);
 
+    // Crear las primeras 7 ventanas
     for (let i = 0; i < 7; i++) {
         i === 0 ? openWindow(true) : openWindow();
     }
 
-    setInterval(() => openWindow(), 3000);
+    // Crear nuevas ventanas cada 3 segundos
+    windowInterval = setInterval(() => openWindow(), 3000);
 }
 
 function openWindow(center = false) {
@@ -40,7 +44,7 @@ function openWindow(center = false) {
     newWindow.document.write(`<body style="background-color: ${color};"><h1>${color}</h1></body>`);
 
     // Almacenar el color dentro de la ventana
-    newWindow.color = color;  // Guardamos el color en una propiedad personalizada
+    newWindow.color = color;
 
     // Detectar el clic normal y el doble clic
     newWindow.onclick = () => handleWindowClick(newWindow);
@@ -50,26 +54,20 @@ function openWindow(center = false) {
 
     activeWindows++;
     totalCreatedWindows++;
+    openWindows.push(newWindow); // Añadir la ventana al array
     document.getElementById('createdWindowsMessage').innerHTML = `Total de finestres creades: ${totalCreatedWindows}`;
 }
 
 // Función para cambiar el color de la ventana al hacer doble clic
 function changeWindowColor(windowRef) {
-    // Elegir un nuevo color aleatorio
     const newColor = colors[Math.floor(Math.random() * colors.length)];
-    
-    // Cambiar el color de fondo de la ventana
     windowRef.document.body.style.backgroundColor = newColor;
-    windowRef.document.querySelector('h1').textContent = newColor; // Actualizar el texto del color en el título
-    
-    // Actualizar el color de la ventana
+    windowRef.document.querySelector('h1').textContent = newColor; 
     windowRef.color = newColor;
 }
 
-
-
 function handleWindowClick(windowRef) {
-    const clickedColor = windowRef.color;  // Obtener el color actual de la ventana
+    const clickedColor = windowRef.color;
     if (lastClickedColor && lastClickedColor === clickedColor && lastClickedWindow !== windowRef) {
         windowRef.close();
         lastClickedWindow.close();
@@ -80,12 +78,20 @@ function handleWindowClick(windowRef) {
         lastClickedWindow = windowRef;
     }
 
-    // Si queda solo una ventana abierta, termina el juego automáticamente como ganado.
     checkRemainingWindows();
+}
+
+function checkRemainingWindows() {
+    if (activeWindows === 1) endGame(true); // Termina el juego automáticamente si solo queda una ventana
 }
 
 function endGame(won) {
     clearInterval(countdown);
+    clearInterval(windowInterval); // Detener la creación de nuevas ventanas
+    // Cerrar todas las ventanas abiertas
+    openWindows.forEach(window => window.close());
+    openWindows = []; // Limpiar el array de ventanas abiertas
+
     document.getElementById('message').innerHTML = won ? "Enhorabona! Has guanyat!" : "No has guanyat, però pots tornar-ho a intentar.";
     localStorage.setItem('totalCreatedWindows', totalCreatedWindows);
     localStorage.setItem('lastGameWon', won);
