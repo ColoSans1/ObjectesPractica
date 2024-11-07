@@ -1,4 +1,4 @@
-let countdown, activeWindows = 0, totalCreatedWindows = 0;
+let countdown, activeWindows = 0, totalCreatedWindows = 0, lastGameWon = false;
 let lastClickedColor = null, lastClickedWindow = null;
 const colors = ['red', 'green', 'blue', 'yellow'];
 
@@ -38,31 +38,50 @@ function openWindow(center = false) {
     
     const newWindow = window.open('', '', `width=${width},height=${height},top=${top},left=${left}`);
     newWindow.document.write(`<body style="background-color: ${color};"><h1>${color}</h1></body>`);
-    newWindow.onclick = () => handleWindowClick(newWindow, color);
+
+    // Almacenar el color dentro de la ventana
+    newWindow.color = color;  // Guardamos el color en una propiedad personalizada
+
+    // Detectar el clic normal y el doble clic
+    newWindow.onclick = () => handleWindowClick(newWindow);
+    
+    // Evento de doble clic para cambiar el color de la ventana
+    newWindow.ondblclick = () => changeWindowColor(newWindow);
 
     activeWindows++;
     totalCreatedWindows++;
     document.getElementById('createdWindowsMessage').innerHTML = `Total de finestres creades: ${totalCreatedWindows}`;
 }
 
-function handleWindowClick(windowRef, color) {
-    if (lastClickedColor && lastClickedColor === color && lastClickedWindow !== windowRef) {
+// Función para cambiar el color de la ventana al hacer doble clic
+function changeWindowColor(windowRef) {
+    // Elegir un nuevo color aleatorio
+    const newColor = colors[Math.floor(Math.random() * colors.length)];
+    
+    // Cambiar el color de fondo de la ventana
+    windowRef.document.body.style.backgroundColor = newColor;
+    windowRef.document.querySelector('h1').textContent = newColor; // Actualizar el texto del color en el título
+    
+    // Actualizar el color de la ventana
+    windowRef.color = newColor;
+}
+
+
+
+function handleWindowClick(windowRef) {
+    const clickedColor = windowRef.color;  // Obtener el color actual de la ventana
+    if (lastClickedColor && lastClickedColor === clickedColor && lastClickedWindow !== windowRef) {
         windowRef.close();
         lastClickedWindow.close();
         activeWindows -= 2;
         lastClickedColor = lastClickedWindow = null;
     } else {
-        lastClickedColor = color;
+        lastClickedColor = clickedColor;
         lastClickedWindow = windowRef;
     }
 
+    // Si queda solo una ventana abierta, termina el juego automáticamente como ganado.
     checkRemainingWindows();
-}
-
-function checkRemainingWindows() {
-    if (activeWindows === 1) {
-        endGame(true);
-    }
 }
 
 function endGame(won) {
