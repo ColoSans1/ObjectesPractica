@@ -24,13 +24,9 @@ function startGame() {
         document.getElementById('countdown').innerHTML = --timeLeft;
         if (timeLeft === 0) endGame(false);
     }, 1000);
-
-    // Crear las primeras 7 ventanas
     for (let i = 0; i < 7; i++) {
         i === 0 ? openWindow(true) : openWindow();
     }
-
-    // Crear nuevas ventanas cada 3 segundos
     windowInterval = setInterval(() => openWindow(), 3000);
 }
 
@@ -43,14 +39,15 @@ function openWindow(center = false) {
     const newWindow = window.open('', '', `width=${width},height=${height},top=${top},left=${left}`);
     newWindow.document.write(`<body style="background-color: ${color};"><h1>${color}</h1></body>`);
 
-    // Almacenar el color dentro de la ventana
     newWindow.color = color;
 
-    // Detectar el clic normal y el doble clic
     newWindow.onclick = () => handleWindowClick(newWindow);
-    
-    // Evento de doble clic para cambiar el color de la ventana
-    newWindow.ondblclick = () => changeWindowColor(newWindow);
+    newWindow.ondblclick = () => {
+        // Cambiar el color de la ventana actual
+        changeWindowColor(newWindow); 
+        // Abrir una nueva ventana con color aleatorio
+        openWindow(); 
+    };
 
     activeWindows++;
     totalCreatedWindows++;
@@ -58,13 +55,13 @@ function openWindow(center = false) {
     document.getElementById('createdWindowsMessage').innerHTML = `Total de finestres creades: ${totalCreatedWindows}`;
 }
 
-// Función para cambiar el color de la ventana al hacer doble clic
 function changeWindowColor(windowRef) {
     const newColor = colors[Math.floor(Math.random() * colors.length)];
     windowRef.document.body.style.backgroundColor = newColor;
-    windowRef.document.querySelector('h1').textContent = newColor; 
+    windowRef.document.querySelector('h1').textContent = newColor;
     windowRef.color = newColor;
 }
+
 
 function handleWindowClick(windowRef) {
     const clickedColor = windowRef.color;
@@ -80,15 +77,12 @@ function handleWindowClick(windowRef) {
 
     checkRemainingWindows();
 }
-
 function checkRemainingWindows() {
-    if (activeWindows === 1) endGame(true); // Termina el juego automáticamente si solo queda una ventana
+    if (activeWindows === 1) endGame(true); 
 }
-
 function endGame(won) {
     clearInterval(countdown);
     clearInterval(windowInterval); // Detener la creación de nuevas ventanas
-    // Cerrar todas las ventanas abiertas
     openWindows.forEach(window => window.close());
     openWindows = []; // Limpiar el array de ventanas abiertas
 
@@ -97,12 +91,10 @@ function endGame(won) {
     localStorage.setItem('lastGameWon', won);
     toggleButtons();
 }
-
 function restartGame() {
     resetGame();
     toggleButtons(false);
 }
-
 function resetGame() {
     activeWindows = totalCreatedWindows = 0;
     lastClickedColor = lastClickedWindow = null;
